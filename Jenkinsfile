@@ -8,14 +8,14 @@ pipeline {
     }
 
     stages {
-
         stage('Clone Repo') {
             steps {
                 checkout([
                     $class: 'GitSCM',
-                    branches: [[name: 'main']],
-                    userRemoteConfigs: [[url: 'https://github.com/DeveloperTiwariji/Dockerized_DevTinder.git']],
-                    extensions: [[$class: 'CleanCheckout'], [$class: 'CloneOption', noTags: false, shallow: false, depth: 0]]
+                    branches: [[name: '*/main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git'
+                    ]]
                 ])
             }
         }
@@ -24,7 +24,7 @@ pipeline {
             steps {
                 sh 'ls -la'
                 sh 'ls -la devTinder-web'
-                sh 'ls -la DevTinder_Backend'
+                sh 'ls -la DevTinder'
             }
         }
 
@@ -44,12 +44,12 @@ pipeline {
 
         stage('Build Backend Docker Image') {
             steps {
-                dir('DevTinder_Backend') {
+                dir('DevTinder') {
                     script {
-                        if (fileExists('Dockerfile')) {  // <-- Corrected here (capital D)
+                        if (fileExists('Dockerfile')) {
                             sh 'docker build -t $BACKEND_IMAGE:latest .'
                         } else {
-                            error "Dockerfile not found in DevTinder_Backend directory"
+                            error "Dockerfile not found in DevTinder directory"
                         }
                     }
                 }
