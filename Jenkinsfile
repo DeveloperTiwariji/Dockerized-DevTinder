@@ -23,8 +23,8 @@ pipeline {
         stage('Debug Workspace') {
             steps {
                 sh 'ls -la'
-                sh 'ls -la devTinder-web'
-                sh 'ls -la DevTinder'
+                sh 'ls -la devTinder-web || true'
+                sh 'ls -la DevTinder || true'
             }
         }
 
