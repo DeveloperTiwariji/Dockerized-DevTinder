@@ -79,7 +79,7 @@ pipeline {
                     writeFile file: '.env', text: '''
 MONGO_URI=mongodb://mongo:27017/devtinder
 JWT_SECRET=your_jwt_secret_here
-PORT=5000
+PORT=3000
 '''
                 }
             }
