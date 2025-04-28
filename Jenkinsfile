@@ -33,7 +33,7 @@ pipeline {
                 dir('devTinder-web') {
                     script {
                         if (fileExists('Dockerfile')) {
-                            sh 'docker build -t $FRONTEND_IMAGE:latest .'
+                            sh "docker build -t ${FRONTEND_IMAGE}:latest ."
                         } else {
                             error "Dockerfile not found in devTinder-web directory"
                         }
@@ -47,7 +47,7 @@ pipeline {
                 dir('DevTinder') {
                     script {
                         if (fileExists('Dockerfile')) {
-                            sh 'docker build -t $BACKEND_IMAGE:latest .'
+                            sh "docker build -t ${BACKEND_IMAGE}:latest ."
                         } else {
                             error "Dockerfile not found in DevTinder directory"
                         }
@@ -68,17 +68,35 @@ pipeline {
 
         stage('Push Images to Docker Hub') {
             steps {
-                sh 'docker push $FRONTEND_IMAGE:latest'
-                sh 'docker push $BACKEND_IMAGE:latest'
+                sh "docker push ${FRONTEND_IMAGE}:latest"
+                sh "docker push ${BACKEND_IMAGE}:latest"
+            }
+        }
+
+        stage('Create .env file') {
+            steps {
+                dir('DevTinder') {
+                    writeFile file: '.env', text: '''
+MONGO_URI=mongodb://mongo:27017/devtinder
+JWT_SECRET=your_jwt_secret_here
+PORT=5000
+'''
+                }
             }
         }
 
         stage('Deploy with Docker Compose') {
             steps {
-                sh '''
-                    docker-compose down || true
-                    docker-compose up --build -d
-                '''
+                script {
+                    if (fileExists('docker-compose.yml')) {
+                        sh '''
+                            docker-compose down || true
+                            docker-compose up --build -d
+                        '''
+                    } else {
+                        error "docker-compose.yml not found in workspace!"
+                    }
+                }
             }
         }
     }
