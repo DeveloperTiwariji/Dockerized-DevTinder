@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:6.0
@@ -10,21 +11,21 @@ services:
       MONGO_INITDB_ROOT_PASSWORD: example
     healthcheck:
       test: ["CMD", "nc", "-z", "localhost", "27017"]
-      interval: 30s
+      interval: 60s  # Increased to check every 60 seconds
       retries: 5
-      start_period: 10s
-      timeout: 5s
+      start_period: 20s  # Increased start period to wait longer before health check starts
+      timeout: 10s
 
   server:
-    image: 12207441/backend-image   
-    container_name: backend-image   
+    image: 12207441/backend-image
+    container_name: backend-image
     ports:
       - "3000:3000"
     env_file:
       - ./DevTinder/.env
     depends_on:
       - mongodb
-    command: ["sh", "-c", "until nc -z mongodb 27017; do sleep 1; done; npm start"]
+    command: ["dockerize", "-wait", "tcp://mongodb:27017", "-timeout", "90s", "npm", "start"]
     networks:
       - devconnect-network
 
