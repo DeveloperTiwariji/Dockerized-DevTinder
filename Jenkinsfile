@@ -76,11 +76,7 @@ pipeline {
         stage('Create .env file') {
             steps {
                 dir('DevTinder') {
-                    writeFile file: '.env', text: '''
-MONGO_URI=mongodb://mongo:27017/devtinder
-JWT_SECRET=your_jwt_secret_here
-PORT=3000
-'''
+                    writeFile file: '.env'
                 }
             }
         }
