@@ -92,8 +92,8 @@ CLIENT_URL=http://localhost:3000
                 script {
                     if (fileExists('docker-compose.yml')) {
                         sh '''
-                            docker-compose down || true
-                            docker-compose up --build -d
+                            docker compose down || true
+                            docker compose up --build -d
                         '''
                     } else {
                         error "docker-compose.yml not found in workspace!"
