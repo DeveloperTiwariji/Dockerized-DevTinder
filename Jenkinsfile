@@ -73,19 +73,18 @@ pipeline {
             }
         }
 
-stage('Create .env file') {
-    steps {
-        dir('DevTinder') {
-            writeFile file: '.env', text: '''
+        stage('Create .env file') {
+            steps {
+                dir('DevTinder') {
+                    writeFile file: '.env', text: '''
 PORT=5000
 MONGO_URI=mongodb://localhost:27017/devtinder
 JWT_SECRET=supersecretkey
 CLIENT_URL=http://localhost:3000
 '''
+                }
+            }
         }
-    }
-}
-
 
         stage('Deploy with Docker Compose') {
             steps {
@@ -102,5 +101,4 @@ CLIENT_URL=http://localhost:3000
             }
         }
     }
-
 }
