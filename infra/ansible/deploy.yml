@@ -1,0 +1,68 @@
+- hosts: devtinder
+  become: true
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    app_dir: /home/ec2-user/devtinder
+    repo_url: https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git
+  tasks:
+    - name: update packages
+      yum:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    - name: install required packages
+      yum:
+        name:
+          - git
+          - python3
+          - python3-pip
+        state: present
+      when: ansible_os_family == "RedHat"
+
+      # simpler: install docker package
+    - name: Install docker using yum
+      yum:
+        name: docker
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: start docker service
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: install pip docker-compose (fallback)
+      pip:
+        name: docker-compose
+        executable: pip3
+
+    - name: clone repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ app_dir }}"
+        version: main
+        force: yes
+        accept_hostkey: yes
+        update: yes
+        key_file: "~/.ssh/devtinder_key"
+
+    - name: create .env (example)
+      copy:
+        dest: "{{ app_dir}}/DevTinder/.env"
+        content: |
+          MONGO_URI=<your-mongo-connection-string>
+          PORT=80
+          # add other env vars
+
+    - name: run docker-compose
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}"
+        state: present

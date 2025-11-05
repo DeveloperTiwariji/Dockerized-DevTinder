@@ -7,6 +7,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongodb_data:/data/db  # Add this to persist data
+    networks:
+      - devconnect-network  # Add this
+    restart: unless-stopped  # Add restart policy
 
   server:
     image: 12207441/backend-image   
@@ -17,8 +22,10 @@ services:
       - ./DevTinder/.env
     depends_on:
       - mongodb
+      - redis  # Add redis dependency
     networks:
       - devconnect-network
+    restart: unless-stopped
 
   client:
     image: 12207441/web-image
@@ -29,6 +36,25 @@ services:
       - server
     networks:
       - devconnect-network
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - devconnect-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes  # Enable persistence
+
+volumes:
+  mongodb_data:  # Add this
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   devconnect-network:

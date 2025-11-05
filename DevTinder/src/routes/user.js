@@ -64,7 +64,7 @@ userRouter.get("/feed", userAuth, async (req,res)=>{
             $or:[
                 {fromeUserId: loggedInUser._id},{toUserId: loggedInUser._id}
             ]
-        }).select("fromeUserId toUserId")
+        }).select("fromeUserId toUserId").lean();
 
         const hideUsersFromFeed = new Set();
         connectionReqests.forEach((req)=>{
@@ -78,7 +78,7 @@ userRouter.get("/feed", userAuth, async (req,res)=>{
                 {_id: {$nin: Array.from(hideUsersFromFeed)}},
                 {_id: {$ne: loggedInUser._id}},
             ]
-        }).select(USER_SAFE_DATA).skip(skip).limit(limit);
+        }).select(USER_SAFE_DATA).skip(skip).limit(limit).lean();
         res.send(users);
     }catch(err){
         res.status(400).send("Error: "+ err.message);

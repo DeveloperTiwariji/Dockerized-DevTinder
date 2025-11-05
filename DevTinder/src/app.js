@@ -3,6 +3,9 @@ const connectDB =require("./config/database");
 const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
+const compression = require("compression");
+
+app.use(compression());
 
 require('dotenv').config();
 
@@ -38,6 +41,12 @@ connectDB().then(()=>{
         
     });
 }).catch((err)=>{
+    console.log(err);
     console.error("Error connecting to the database");
 })
+
+// app.listen(process.env.PORT, ()=>{
+//     console.log("Server is running on port 3000");
+    
+// });
 

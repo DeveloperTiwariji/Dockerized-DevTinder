@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema({
         unique:true,
         trim:true,
         lowercase:true,
+        index:true,
         validate(value){
             if(!validator.isEmail(value)){
                 throw new Error("Email is not valid");
@@ -92,6 +93,9 @@ userSchema.methods.validatePassword = async function(passwordInputByUser){
 
     return isPasswordValid;
 }
+
+userSchema.index({ _id: 1, createdAt: -1 });
+userSchema.index({ gender: 1, age: 1 });
 
 
 const User = mongoose.model("User", userSchema);
