@@ -1,0 +1,38 @@
+# Node dependencies
+node_modules/
+devTinder-web/node_modules/
+devTinder/node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env
+infra/ansible/.env
+infra/ansible/.env.example   # only if contains secrets
+
+# SSH keys
+*.pem
+*.key
+*.crt
+*.pub
+~/.ssh/
+
+# Terraform sensitive files
+infra/terraform/terraform.tfstate
+infra/terraform/terraform.tfstate.backup
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+
+# Python cache (Ansible)
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# VSCode and OS junk files
+.vscode/
+.DS_Store
+Thumbs.db

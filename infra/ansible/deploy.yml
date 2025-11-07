@@ -58,7 +58,7 @@
       copy:
         dest: "{{ app_dir}}/DevTinder/.env"
         content: |
-          MONGO_URI=<your-mongo-connection-string>
+          MONGO_URI="mongodb+srv://Srish01:Satyam1234@cluster0.jhme4.mongodb.net/devTinder"
           PORT=80
           # add other env vars
 

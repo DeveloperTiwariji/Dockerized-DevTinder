@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:6.0
@@ -7,22 +9,16 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
-    volumes:
-      - mongodb_data:/data/db  # Add this to persist data
-    networks:
-      - devconnect-network  # Add this
-    restart: unless-stopped  # Add restart policy
 
   server:
-    image: 12207441/backend-image   
-    container_name: backend-image   
+    image: 12207441/backend-image
+    container_name: backend-image
     ports:
       - "3000:3000"
     env_file:
       - ./DevTinder/.env
     depends_on:
       - mongodb
-      - redis  # Add redis dependency
     networks:
       - devconnect-network
     restart: unless-stopped
