@@ -1,38 +1,66 @@
 # Node dependencies
 node_modules/
+**/node_modules/
+DevTinder/node_modules/
 devTinder-web/node_modules/
-devTinder/node_modules/
+package-lock.json
 
 # Build outputs
 dist/
 build/
+**/dist/
+**/build/
 
 # Environment variables
 .env
+.env.local
+.env.*.local
+**/.env
 infra/ansible/.env
-infra/ansible/.env.example   # only if contains secrets
 
 # SSH keys
 *.pem
 *.key
 *.crt
-*.pub
-~/.ssh/
+devtinder_key
+devtinder_key.pub
 
-# Terraform sensitive files
+# Terraform files (state, lock, providers)
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+*.tfstate
+*.tfstate.*
+infra/bootstrap/terraform.tfstate
+infra/bootstrap/terraform.tfstate.backup
 infra/terraform/terraform.tfstate
 infra/terraform/terraform.tfstate.backup
-infra/terraform/.terraform/
-infra/terraform/.terraform.lock.hcl
+
+# Temporary scripts (optional - remove if you want to keep)
+diagnose.sh
+fix-deployment.sh
+fix-ec2-deployment.sh
 
 # Python cache (Ansible)
 __pycache__/
 *.pyc
+*.pyo
 
 # Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# VSCode and OS junk files
+# VSCode and OS files
 .vscode/
 .DS_Store
 Thumbs.db
+*.swp
+*.swo
+*~
+
+# Docker volumes (if accidentally created locally)
+nagios_etc/
+nagios_var/
