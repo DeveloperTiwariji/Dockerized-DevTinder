@@ -6,6 +6,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://www.docker.com/)
 [![Terraform](https://img.shields.io/badge/Terraform-IaC-7B42BC?logo=terraform)](https://www.terraform.io/)
 [![Nagios](https://img.shields.io/badge/Monitoring-Nagios-00C853)](https://www.nagios.org/)
+[![CI/CD](https://github.com/DeveloperTiwariji/Dockerized-DevTinder/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/DeveloperTiwariji/Dockerized-DevTinder/actions/workflows/ci-cd.yml)
 
 ---
 
@@ -19,6 +20,7 @@
 - [Docker Services](#-docker-services)
 - [Infrastructure Setup (Terraform)](#-infrastructure-setup-terraform)
 - [Deployment to AWS EC2](#-deployment-to-aws-ec2)
+- [CI/CD with GitHub Actions](#-cicd-with-github-actions)
 - [Nagios Monitoring](#-nagios-monitoring)
 - [Environment Variables](#-environment-variables)
 - [API Documentation](#-api-documentation)
@@ -634,7 +636,125 @@ ansible-playbook -i inventory.ini deploy.yml
 
 ---
 
-## 📊 Nagios Monitoring
+## � CI/CD with GitHub Actions
+
+### Automated Pipeline Overview
+
+DevTinder uses GitHub Actions for continuous integration and deployment:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    GitHub Repository                        │
+│                 (Push to main branch)                       │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     ├─► Job 1: Backend Build & Test
+                     │   └─ npm install, lint, test, docker build
+                     │
+                     ├─► Job 2: Frontend Build & Test
+                     │   └─ npm install, lint, build, test
+                     │
+                     ├─► Job 3: Build & Push Docker Images
+                     │   └─ Build → Tag → Push to Docker Hub
+                     │
+                     └─► Job 4: Deploy to EC2
+                         └─ SSH → Pull Code → Restart Containers
+                              │
+                              └─► Health Check → Success/Failure
+```
+
+### Workflows Included
+
+#### 1. **Main CI/CD Pipeline** (`ci-cd.yml`)
+- Triggers on push to `main` or `develop`
+- Runs tests for both backend and frontend
+- Builds and pushes Docker images to Docker Hub
+- Deploys to EC2 automatically
+- Runs health checks post-deployment
+
+#### 2. **Pull Request Checks** (`pr-checks.yml`)
+- Triggers on PRs to `main` or `develop`
+- Runs linters and tests
+- Validates Docker builds
+- Checks docker-compose configuration
+
+#### 3. **Manual Deployment** (`manual-deploy.yml`)
+- Trigger manually from GitHub UI
+- Choose environment (production/staging/development)
+- Choose specific version to deploy
+- Automatic backup and rollback on failure
+
+### Quick Setup Guide
+
+#### Step 1: Add GitHub Secrets
+
+Go to **Settings → Secrets and variables → Actions** and add:
+
+```bash
+# Docker Hub
+DOCKER_USERNAME=your-dockerhub-username
+DOCKER_PASSWORD=your-dockerhub-token
+
+# AWS Credentials
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+
+# EC2 SSH Access
+EC2_SSH_PRIVATE_KEY=your-private-key-content
+EC2_HOST=3.6.150.204
+EC2_USER=ec2-user
+```
+
+#### Step 2: Enable Actions
+
+```bash
+# Go to repository → Actions tab
+# Click "I understand my workflows, go ahead and enable them"
+```
+
+#### Step 3: Test Pipeline
+
+```bash
+# Push to main branch
+git add .
+git commit -m "feat: trigger CI/CD"
+git push origin main
+
+# Or trigger manually
+# GitHub → Actions → Manual Deployment → Run workflow
+```
+
+### Monitoring Deployments
+
+```bash
+# View workflow runs
+GitHub → Actions tab
+
+# View real-time logs
+Click on running workflow → Click on job → View logs
+
+# Check deployment on EC2
+ssh -i ~/.ssh/devtinder_key ec2-user@<EC2_IP>
+docker-compose ps
+docker-compose logs -f
+```
+
+### Detailed Documentation
+
+For complete CI/CD setup instructions, see: [`.github/CICD_SETUP.md`](.github/CICD_SETUP.md)
+
+Topics covered:
+- ✅ How to get Docker Hub and AWS credentials
+- ✅ How to add SSH keys to GitHub secrets
+- ✅ Detailed explanation of each workflow
+- ✅ Customization options
+- ✅ Troubleshooting common issues
+- ✅ Rollback procedures
+- ✅ Security best practices
+
+---
+
+## �📊 Nagios Monitoring
 
 ### What is Monitored
 
@@ -1395,7 +1515,7 @@ copies or substantial portions of the Software.
 - [ ] Integrate Stripe for premium features
 - [ ] Mobile app with React Native
 - [ ] Kubernetes deployment
-- [ ] CI/CD with GitHub Actions
+- [x] CI/CD with GitHub Actions ✅
 - [ ] Unit and integration tests
 - [ ] Performance monitoring with Prometheus
 - [ ] Log aggregation with ELK stack

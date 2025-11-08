@@ -1,0 +1,108 @@
+name: Manual Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+      version:
+        description: 'Docker image version/tag'
+        required: true
+        default: 'latest'
+
+jobs:
+  deploy:
+    name: Deploy to ${{ github.event.inputs.environment }}
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/devtinder_key
+          chmod 400 ~/.ssh/devtinder_key
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          EC2_USER: ${{ secrets.EC2_USER }}
+          VERSION: ${{ github.event.inputs.version }}
+          ENVIRONMENT: ${{ github.event.inputs.environment }}
+        run: |
+          ssh -i ~/.ssh/devtinder_key $EC2_USER@$EC2_HOST << 'ENDSSH'
+            set -e
+            
+            echo "🚀 Starting deployment to $ENVIRONMENT environment..."
+            echo "📦 Version: $VERSION"
+            
+            cd /home/ec2-user/devtinder
+            
+            # Backup current state
+            echo "💾 Creating backup..."
+            docker-compose down
+            tar -czf backup-$(date +%Y%m%d-%H%M%S).tar.gz docker-compose.yml .env || true
+            
+            # Pull latest code
+            echo "📥 Pulling code..."
+            git pull origin main
+            
+            # Update docker-compose to use specific version
+            if [ "$VERSION" != "latest" ]; then
+              sed -i "s/:latest/:$VERSION/g" docker-compose.yml
+            fi
+            
+            # Pull and start
+            echo "🐳 Pulling images..."
+            docker-compose pull
+            
+            echo "🚀 Starting services..."
+            docker-compose up -d
+            
+            # Wait and verify
+            echo "⏳ Waiting for services..."
+            sleep 15
+            
+            echo "✅ Verifying deployment..."
+            docker-compose ps
+            docker-compose logs --tail=20
+            
+            echo "✅ Deployment to $ENVIRONMENT completed!"
+          ENDSSH
+
+      - name: Verify deployment
+        run: |
+          echo "🏥 Health checking..."
+          sleep 10
+          curl -f http://${{ secrets.EC2_HOST }}:3000/api/health || exit 1
+          echo "✅ Health check passed!"
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Initiating rollback..."
+          ssh -i ~/.ssh/devtinder_key ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'ENDSSH'
+            cd /home/ec2-user/devtinder
+            
+            # Find latest backup
+            LATEST_BACKUP=$(ls -t backup-*.tar.gz 2>/dev/null | head -1)
+            
+            if [ -n "$LATEST_BACKUP" ]; then
+              echo "📦 Restoring from backup: $LATEST_BACKUP"
+              tar -xzf "$LATEST_BACKUP"
+              docker-compose up -d
+              echo "✅ Rollback completed"
+            else
+              echo "⚠️  No backup found, manual intervention required"
+            fi
+          ENDSSH
