@@ -198,19 +198,68 @@ jobs:
       - name: Install Ansible
         run: |
           sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get install -y ansible sshpass
 
-      - name: Bootstrap EC2 with Python (raw SSH)
+      - name: Deploy to EC2 via direct SSH
+        env:
+          EC2_IP: ${{ steps.terraform.outputs.ec2_ip }}
         run: |
-          EC2_IP=${{ steps.terraform.outputs.ec2_ip }}
-          echo "Installing Python3 on EC2..."
-          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP \
-            'sudo yum install -y python3 python3-pip git docker'
-
-      - name: Run Ansible deployment
-        working-directory: ./infra/ansible
-        run: |
-          ansible-playbook -i inventory.ini deploy.yml -v
+          echo "🚀 Deploying to EC2: $EC2_IP"
+          
+          # Install packages and setup
+          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP bash << 'ENDSSH'
+            set -e
+            echo "📦 Installing packages..."
+            sudo yum install -y python3 python3-pip git docker
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo usermod -aG docker ec2-user
+            sudo pip3 install docker-compose
+            
+            echo "📂 Setting up app directory..."
+            mkdir -p /home/ec2-user/devtinder
+            cd /home/ec2-user/devtinder
+            
+            echo "🔄 Cloning repo..."
+            if [ -d ".git" ]; then
+              git pull origin main
+            else
+              git clone https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git .
+            fi
+          ENDSSH
+          
+          # Copy secrets.yml to EC2
+          scp -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no \
+            infra/ansible/secrets.yml ec2-user@$EC2_IP:/tmp/secrets.yml
+          
+          # Create .env from secrets and start services
+          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP bash << 'ENDSSH2'
+            cd /home/ec2-user/devtinder
+            
+            # Read secrets from YAML and create .env
+            MONGO_URI=$(grep "mongo_uri:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
+            JWT_SECRET=$(grep "jwt_secret:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
+            AWS_KEY=$(grep "aws_access_key:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
+            AWS_SECRET=$(grep "aws_secret_key:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
+            
+            cat > DevTinder/.env << EOF
+          PORT=3000
+          DB_CONNECTION_SECRET=$MONGO_URI
+          JWT_SECRET=$JWT_SECRET
+          AWS_ACCESS_KEY=$AWS_KEY
+          AWS_SECRET_KEY=$AWS_SECRET
+          NODE_ENV=production
+          EOF
+            
+            rm /tmp/secrets.yml
+            
+            echo "🐳 Starting services..."
+            docker-compose pull || true
+            docker-compose down || true
+            docker-compose up -d
+            sleep 15
+            docker-compose ps
+          ENDSSH2
 
       - name: Health check
         env:
