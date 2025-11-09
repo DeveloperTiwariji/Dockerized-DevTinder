@@ -4,6 +4,10 @@ WORKDIR /app
 
 COPY package*.json ./
 
+# Install Python and build tools needed for bcrypt compilation
+RUN apk add --no-cache python3 make g++
+
+# Install all dependencies (bcrypt will compile from source)
 RUN npm install
 
 # 👇 dockerize install karo yahan
