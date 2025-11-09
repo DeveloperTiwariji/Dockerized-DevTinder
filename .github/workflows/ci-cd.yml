@@ -232,30 +232,20 @@ jobs:
             git clone https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git .
           ENDSSH
           
-          # Copy secrets.yml to EC2
-          scp -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no \
-            infra/ansible/secrets.yml ec2-user@$EC2_IP:/tmp/secrets.yml
-          
-          # Create .env from secrets and start services
-          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP bash << 'ENDSSH2'
-            cd /home/ec2-user/devtinder
-            
-            # Read secrets from YAML and create .env
-            MONGO_URI=$(grep "mongo_uri:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
-            JWT_SECRET=$(grep "jwt_secret:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
-            AWS_KEY=$(grep "aws_access_key:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
-            AWS_SECRET=$(grep "aws_secret_key:" /tmp/secrets.yml | awk '{print $2}' | tr -d '"')
-            
-            cat > DevTinder/.env << EOF
+          # Create .env file with secrets from GitHub Secrets
+          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP \
+            "cat > /home/ec2-user/devtinder/DevTinder/.env" << EOF
           PORT=3000
-          DB_CONNECTION_SECRET=$MONGO_URI
-          JWT_SECRET=$JWT_SECRET
-          AWS_ACCESS_KEY=$AWS_KEY
-          AWS_SECRET_KEY=$AWS_SECRET
+          DB_CONNECTION_SECRET=${{ secrets.MONGO_URI }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
           NODE_ENV=production
           EOF
-            
-            rm /tmp/secrets.yml
+          
+          # Start services
+          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP bash << 'ENDSSH2'
+            cd /home/ec2-user/devtinder
             
             echo "🐳 Starting services..."
             docker-compose pull || true

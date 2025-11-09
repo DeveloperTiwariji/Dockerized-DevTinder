@@ -4,7 +4,7 @@ Go to: https://github.com/DeveloperTiwariji/Dockerized-DevTinder/settings/secret
 
 ---
 
-## ✅ ONLY 5 Secrets Needed (EC2_HOST removed!)
+## ✅ ALL 7 Secrets Needed
 
 ### 1. Docker Hub (2 secrets)
 
@@ -37,6 +37,17 @@ MIIEpAIBAAKCAQEA...
 ... (all lines)
 -----END RSA PRIVATE KEY-----
 ```
+
+---
+
+### 4. Application Secrets (2 secrets) - **NEW!**
+
+| Secret Name | Value | Description |
+|------------|-------|-------------|
+| `MONGO_URI` | `mongodb+srv://...` | MongoDB connection string |
+| `JWT_SECRET` | `Sattu01@A` | JWT signing secret |
+
+**Copy from:** `infra/ansible/secrets.yml`
 
 ---
 
@@ -80,8 +91,10 @@ After adding secrets, verify you have:
 - [x] `AWS_ACCESS_KEY_ID` = AWS Access Key
 - [x] `AWS_SECRET_ACCESS_KEY` = AWS Secret Key  
 - [x] `EC2_SSH_PRIVATE_KEY` = Full SSH private key content
+- [x] `MONGO_URI` = MongoDB connection string (from secrets.yml)
+- [x] `JWT_SECRET` = JWT secret (from secrets.yml)
 
-**Total: 5 secrets** (was 7 before)
+**Total: 7 secrets**
 
 ---
 
