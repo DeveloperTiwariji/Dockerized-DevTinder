@@ -182,40 +182,22 @@ jobs:
           chmod 400 ~/.ssh/devtinder_key
           ssh-keyscan -H ${{ steps.terraform.outputs.ec2_ip }} >> ~/.ssh/known_hosts
 
-      - name: Deploy to EC2
-        env:
-          EC2_HOST: ${{ steps.terraform.outputs.ec2_ip }}
-          EC2_USER: ec2-user
+      - name: Update Ansible inventory with EC2 IP
         run: |
-          ssh -i ~/.ssh/devtinder_key $EC2_USER@$EC2_HOST << 'ENDSSH'
-            set -e
-            
-            echo "🔄 Navigating to application directory..."
-            cd /home/ec2-user/devtinder || exit 1
-            
-            echo "📥 Pulling latest code from GitHub..."
-            git pull origin main
-            
-            echo "🐳 Pulling latest Docker images..."
-            docker-compose pull
-            
-            echo "⚙️  Stopping current containers..."
-            docker-compose down
-            
-            echo "🚀 Starting updated containers..."
-            docker-compose up -d
-            
-            echo "⏳ Waiting for services to start..."
-            sleep 10
-            
-            echo "✅ Verifying deployment..."
-            docker-compose ps
-            
-            echo "🧹 Cleaning up old images..."
-            docker image prune -f
-            
-            echo "✅ Deployment completed successfully!"
-          ENDSSH
+          cd infra/ansible
+          EC2_IP=${{ steps.terraform.outputs.ec2_ip }}
+          sed -i "s/ansible_host=.*/ansible_host=$EC2_IP/" inventory.ini
+          cat inventory.ini
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Run Ansible deployment
+        working-directory: ./infra/ansible
+        run: |
+          ansible-playbook -i inventory.ini deploy.yml -v
 
       - name: Health check
         env:
