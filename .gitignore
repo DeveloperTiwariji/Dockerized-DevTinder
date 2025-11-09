@@ -17,6 +17,7 @@ build/
 .env.*.local
 **/.env
 infra/ansible/.env
+infra/ansible/secrets.yml
 
 # SSH keys
 *.pem

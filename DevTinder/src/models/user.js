@@ -76,8 +76,10 @@ const userSchema = new mongoose.Schema({
 userSchema.methods.getJWT = async function() {
     const user = this;
 
-    try{const token = await jwt.sign({_id:user._id},"Sattu01@A", {expiresIn:"7d"});
-    return token;}catch(err){
+    try{
+        const token = await jwt.sign({_id:user._id}, process.env.JWT_SECRET, {expiresIn:"7d"});
+        return token;
+    }catch(err){
         throw new Error("Error generating JWT: "+ err.message);
     }
 }

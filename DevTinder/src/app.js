@@ -14,11 +14,20 @@ require('dotenv').config();
 
 
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://13.235.214.25:5173", "http://13.235.214.25"],
     credentials: true,
 }));
 app.use(express.json());
 app.use(cookieParser());
+
+// Health check endpoint for monitoring
+app.get("/api/health", (req, res) => {
+    res.status(200).json({ 
+        status: "healthy", 
+        service: "devtinder-api",
+        timestamp: new Date().toISOString()
+    });
+});
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");

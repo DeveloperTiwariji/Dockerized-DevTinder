@@ -9,6 +9,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - devconnect-network
+    restart: unless-stopped
 
   server:
     image: 12207441/backend-image
@@ -46,10 +51,34 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes  # Enable persistence
 
+  nagios:
+    build: ./nagios
+    container_name: nagios
+    ports:
+      - "8080:80"
+    environment:
+      - NAGIOSADMIN_USER=nagiosadmin
+      - NAGIOSADMIN_PASS=admin
+    volumes:
+      - nagios_etc:/opt/nagios/etc
+      - nagios_var:/opt/nagios/var
+    networks:
+      - devconnect-network
+    depends_on:
+      - server
+      - client
+      - mongodb
+      - redis
+    restart: unless-stopped
+
 volumes:
-  mongodb_data:  # Add this
+  mongodb_data:
     driver: local
   redis_data:
+    driver: local
+  nagios_etc:
+    driver: local
+  nagios_var:
     driver: local
 
 networks:

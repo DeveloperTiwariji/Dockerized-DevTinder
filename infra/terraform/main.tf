@@ -43,6 +43,13 @@ resource "aws_security_group" "instance_sg" {
   cidr_blocks = ["0.0.0.0/0"]
   description = "Frontend (Vite) access"
   }
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Nagios monitoring dashboard"
+  }
 
   egress {
     from_port   = 0

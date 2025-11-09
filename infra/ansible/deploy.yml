@@ -4,6 +4,9 @@
     ansible_python_interpreter: /usr/bin/python3
     app_dir: /home/ec2-user/devtinder
     repo_url: https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git
+    # Load sensitive variables from vars file (not committed to git)
+  vars_files:
+    - secrets.yml
   tasks:
     - name: update packages
       yum:
@@ -39,10 +42,14 @@
         groups: docker
         append: yes
 
-    - name: install pip docker-compose (fallback)
+    - name: install docker SDK with compatible urllib3
       pip:
-        name: docker-compose
+        name:
+          - urllib3<2.0
+          - docker<7.0.0
+          - docker-compose
         executable: pip3
+        state: present
 
     - name: clone repo
       git:
@@ -54,15 +61,30 @@
         update: yes
         key_file: "~/.ssh/devtinder_key"
 
-    - name: create .env (example)
+    - name: create .env for backend
       copy:
         dest: "{{ app_dir}}/DevTinder/.env"
         content: |
-          MONGO_URI="mongodb+srv://Srish01:Satyam1234@cluster0.jhme4.mongodb.net/devTinder"
-          PORT=80
-          # add other env vars
+          PORT=3000
+          DB_CONNECTION_SECRET="{{ mongo_uri }}"
+          JWT_SECRET="{{ jwt_secret }}"
+          AWS_ACCESS_KEY="{{ aws_access_key }}"
+          AWS_SECRET_KEY="{{ aws_secret_key }}"
+          NODE_ENV=production
 
-    - name: run docker-compose
+    - name: pull latest docker images
       community.docker.docker_compose:
         project_src: "{{ app_dir }}"
+        pull: yes
+
+    - name: stop existing containers
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}"
+        state: absent
+
+    - name: start docker-compose services
+      community.docker.docker_compose:
+        project_src: "{{ app_dir }}"
+        build: yes
         state: present
+        restarted: yes

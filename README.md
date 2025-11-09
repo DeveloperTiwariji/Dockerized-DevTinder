@@ -754,7 +754,7 @@ Topics covered:
 
 ---
 
-## �📊 Nagios Monitoring
+## 📊 Nagios Monitoring
 
 ### What is Monitored
 
