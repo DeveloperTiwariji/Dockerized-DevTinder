@@ -200,6 +200,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ansible
 
+      - name: Bootstrap EC2 with Python (raw SSH)
+        run: |
+          EC2_IP=${{ steps.terraform.outputs.ec2_ip }}
+          echo "Installing Python3 on EC2..."
+          ssh -i ~/.ssh/devtinder_key -o StrictHostKeyChecking=no ec2-user@$EC2_IP \
+            'sudo yum install -y python3 python3-pip git docker'
+
       - name: Run Ansible deployment
         working-directory: ./infra/ansible
         run: |
