@@ -85,14 +85,14 @@
         mode: '0644'
 
     - name: pull latest docker images
-      shell: docker-compose pull
+      shell: sg docker -c "docker-compose pull"
       args:
         chdir: "{{ app_dir }}"
       become: yes
       become_user: ec2-user
 
     - name: stop existing containers
-      shell: docker-compose down
+      shell: sg docker -c "docker-compose down"
       args:
         chdir: "{{ app_dir }}"
       become: yes
@@ -100,7 +100,7 @@
       ignore_errors: yes
 
     - name: start docker-compose services
-      shell: docker-compose up -d
+      shell: sg docker -c "docker-compose up -d"
       args:
         chdir: "{{ app_dir }}"
       become: yes
@@ -111,7 +111,7 @@
         timeout: 30
 
     - name: verify containers are running
-      shell: docker-compose ps
+      shell: sg docker -c "docker-compose ps"
       args:
         chdir: "{{ app_dir }}"
       become: yes
