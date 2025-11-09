@@ -217,15 +217,19 @@ jobs:
             sudo pip3 install docker-compose
             
             echo "📂 Setting up app directory..."
+            # Clean up old directory if it exists with wrong ownership
+            if [ -d "/home/ec2-user/devtinder" ]; then
+              sudo rm -rf /home/ec2-user/devtinder
+            fi
+            
             mkdir -p /home/ec2-user/devtinder
             cd /home/ec2-user/devtinder
             
+            # Configure git to trust this directory
+            git config --global --add safe.directory /home/ec2-user/devtinder
+            
             echo "🔄 Cloning repo..."
-            if [ -d ".git" ]; then
-              git pull origin main
-            else
-              git clone https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git .
-            fi
+            git clone https://github.com/DeveloperTiwariji/Dockerized-DevTinder.git .
           ENDSSH
           
           # Copy secrets.yml to EC2
