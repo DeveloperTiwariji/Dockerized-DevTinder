@@ -44,6 +44,13 @@ resource "aws_security_group" "instance_sg" {
   description = "Frontend (Vite) access"
   }
   ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Backend API"
+  }
+  ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
