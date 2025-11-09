@@ -186,7 +186,13 @@ jobs:
         run: |
           cd infra/ansible
           EC2_IP=${{ steps.terraform.outputs.ec2_ip }}
-          sed -i "s/ansible_host=.*/ansible_host=$EC2_IP/" inventory.ini
+          SSH_KEY="$HOME/.ssh/devtinder_key"
+          
+          # Update both IP and SSH key path
+          sed -i "s|ansible_host=[^ ]*|ansible_host=$EC2_IP|" inventory.ini
+          sed -i "s|ansible_ssh_private_key_file=.*|ansible_ssh_private_key_file=$SSH_KEY|" inventory.ini
+          
+          echo "Updated inventory.ini:"
           cat inventory.ini
 
       - name: Install Ansible
