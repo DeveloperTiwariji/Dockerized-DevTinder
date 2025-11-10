@@ -13,8 +13,31 @@ require('dotenv').config();
 // app.use(cors({ origin: true, credentials: true }));
 
 
+// Dynamic CORS configuration for production and development
+const allowedOrigins = [
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:5174"
+];
+
+// In production, add the EC2 public IP or domain
+if (process.env.NODE_ENV === 'production' && process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-    origin: ["http://localhost:5173", "http://13.235.214.25:5173", "http://13.235.214.25"],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        
+        // Check if the origin is in the allowed list
+        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 app.use(express.json());
@@ -38,10 +61,10 @@ const userRouter = require("./routes/user");
 
  
 
-app.use("/", authRouter);
-app.use("/", profileRouter);
-app.use("/", requestRouter);
-app.use("/", userRouter);
+app.use("/api", authRouter);
+app.use("/api", profileRouter);
+app.use("/api", requestRouter);
+app.use("/api", userRouter);
 
 connectDB().then(()=>{
     console.log("Connected to the database");

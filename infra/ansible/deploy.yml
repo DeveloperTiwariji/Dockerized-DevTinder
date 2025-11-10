@@ -80,6 +80,7 @@
           AWS_ACCESS_KEY="{{ aws_access_key }}"
           AWS_SECRET_KEY="{{ aws_secret_key }}"
           NODE_ENV=production
+          FRONTEND_URL=http://{{ ansible_host }}:5173
         owner: ec2-user
         group: ec2-user
         mode: '0644'

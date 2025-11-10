@@ -29,15 +29,17 @@ const userSchema = new mongoose.Schema({
     },
     password:{
         type:String,
-        required:true,
+        required: function() {
+            return !this.googleId; // Password required only if not a Google user
+        },
         minlength:8,
         maxlength:128,
-        validate(value){
-            if(!validator.isStrongPassword(value)){
+        validate(value) {
+            // Only validate password strength if password is provided
+            if(value && !validator.isStrongPassword(value)){
                 throw new Error("Enter a strong password");
             }
         }
-        
     },
     age:{
         type:Number,
@@ -69,6 +71,10 @@ const userSchema = new mongoose.Schema({
     },
     skills:{
         type:[String],
+    },
+    googleId:{
+        type:String,
+        sparse: true,
     }
 }, {timestamps:true});
 
@@ -87,6 +93,10 @@ userSchema.methods.getJWT = async function() {
 
 userSchema.methods.validatePassword = async function(passwordInputByUser){
     const user = this;
+    // If user logged in with Google, skip password validation
+    if (user.googleId) {
+        return false;
+    }
     const passwordHash = user.password;
     
 

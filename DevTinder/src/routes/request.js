@@ -3,7 +3,7 @@ const {userAuth} = require("../middlewares/auth");
 const connectionRequest = require("../models/connectionRequests");
 const requestRouter = express.Router();
 const User = require("../models/user");
-const sendEmail = require("../utils/sendEmail");
+// const sendEmail = require("../utils/sendEmail"); // Disabled email feature
 
 requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)=>{
 
@@ -12,8 +12,11 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         const toUserId = req.params.toUserId;
         const status = req.params.status;
 
+        console.log("Request received - Status:", status, "From:", fromeUserId, "To:", toUserId);
+
         const allowedStatus = ["interested","ignored"];
         if(!allowedStatus.includes(status)){
+            console.log("Invalid status:", status);
             return res.status(400).json({message: "Invalid stauts type: "+ status});
         }
 
@@ -44,8 +47,9 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
 
         const data = await connectionRequestData.save();
         
-        const emailRes = await sendEmail.run("A new friend request from "+req.user.firstName ,req.user.firstName+" is "+status+ " to "+toUser.firstName);
-        console.log(emailRes);
+        // Temporarily disabled email notification due to AWS SES token issue
+        // const emailRes = await sendEmail.run("A new friend request from "+req.user.firstName ,req.user.firstName+" is "+status+ " to "+toUser.firstName);
+        // console.log(emailRes);
 
         res.json({
             message: req.user.firstName+" is "+status+ " to "+toUser.firstName,
@@ -54,6 +58,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
 
  
     }catch(err){
+        console.error("Error in send request:", err);
         res.status(400).send("Error: "+ err.message)
     }
 })
